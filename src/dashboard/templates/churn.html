@@ -52,9 +52,9 @@
         <div class="table-filters">
             <select id="risk-filter" onchange="filterAccounts()">
                 <option value="">All Levels</option>
-                <option value="High">High Risk</option>
-                <option value="Medium">Medium Risk</option>
                 <option value="Low">Low Risk</option>
+                <option value="Medium">Medium Risk</option>
+                <option value="High">High Risk</option>
             </select>
         </div>
     </div>
@@ -114,13 +114,13 @@ function updateChurnKPIs(summary) {
 function renderRiskDistChart(summary) {
     const ctx = document.getElementById('riskDistChart').getContext('2d');
     const breakdown = summary.risk_breakdown || {};
-    const labels = ['High', 'Medium', 'Low'];
+    const labels = RISK_ORDER;
     new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: labels,
             datasets: [{
-                data: [breakdown.High || 0, breakdown.Medium || 0, breakdown.Low || 0],
+                data: orderedData(breakdown, RISK_ORDER),
                 backgroundColor: mapColors(labels, RISK_COLORS),
                 borderWidth: 2,
                 borderColor: '#ffffff',
@@ -145,14 +145,14 @@ function renderRevenueRiskChart(accounts) {
         counts[level] = (counts[level] || 0) + 1;
     });
 
-    const labels = ['High', 'Medium', 'Low'];
+    const labels = RISK_ORDER;
     new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
             datasets: [{
                 label: 'Revenue at Risk',
-                data: [grouped.High, grouped.Medium, grouped.Low],
+                data: orderedData(grouped, RISK_ORDER),
                 backgroundColor: mapColors(labels, RISK_COLORS),
             }]
         },

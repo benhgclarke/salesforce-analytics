@@ -43,10 +43,10 @@
         <div class="table-filters">
             <select id="priority-filter" onchange="filterLeads()">
                 <option value="">All Priorities</option>
-                <option value="Critical">Critical</option>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
                 <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
             </select>
         </div>
     </div>
@@ -128,15 +128,14 @@ function renderScoreDistChart(dist) {
 function renderPriorityChart(dist) {
     const ctx = document.getElementById('priorityChart').getContext('2d');
     const breakdown = dist.priority_breakdown || {};
-    const labels = Object.keys(breakdown);
-    const priorityColors = {Critical: COLORS.critical, High: COLORS.high, Medium: COLORS.medium, Low: COLORS.low};
+    const labels = PRIORITY_ORDER;
     new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: labels,
             datasets: [{
-                data: Object.values(breakdown),
-                backgroundColor: mapColors(labels, priorityColors),
+                data: orderedData(breakdown, PRIORITY_ORDER),
+                backgroundColor: mapColors(labels, PRIORITY_COLORS),
                 borderWidth: 2,
                 borderColor: '#ffffff',
             }]

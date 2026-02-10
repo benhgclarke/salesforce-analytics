@@ -84,7 +84,10 @@ class LeadScorer:
             "total_leads": len(scored),
             "average_score": round(scored["Lead_Score"].mean(), 1),
             "median_score": round(scored["Lead_Score"].median(), 1),
-            "priority_breakdown": scored["Priority"].value_counts().to_dict(),
+            "priority_breakdown": {
+                level: int((scored["Priority"] == level).sum())
+                for level in ["Low", "Medium", "High", "Critical"]
+            },
             "score_ranges": {
                 "0-30 (Low)": int((scored["Lead_Score"] <= 30).sum()),
                 "31-60 (Medium)": int(

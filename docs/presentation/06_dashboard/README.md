@@ -15,8 +15,8 @@
 | `dashboard.js` | `src/dashboard/static/js/dashboard.js` | Shared JS + colour palette |
 
 ### Pages
-1. **Dashboard** (`/`) — KPI cards, lead treemap, pipeline combo chart, churn doughnut, health radar, alerts
-2. **Lead Scoring** (`/leads`) — Score bar chart, priority treemap, filterable lead table
+1. **Dashboard** (`/`) — KPI cards, lead doughnut, pipeline combo chart, churn doughnut, health radar, alerts
+2. **Lead Scoring** (`/leads`) — Score bar chart, priority doughnut, filterable lead table
 3. **Pipeline Health** (`/pipeline`) — Horizontal funnel, radar chart, forecast doughnut, risks + recommendations
 4. **Churn Risk** (`/churn`) — Risk doughnut, revenue-at-risk bar + avg revenue table, account table
 
@@ -33,26 +33,25 @@
 | `GET /api/alerts` | Recent alert history |
 
 ### Chart Types Used
-- **Treemap** — for 4+ category breakdowns (lead priorities, score ranges)
-- **Doughnut** — for 3 or fewer categories (churn risk, forecast)
+- **Doughnut** — priority breakdowns (lead priorities, churn risk, forecast)
 - **Bar** — revenue at risk, score distribution
 - **Combo** — pipeline by stage (bar + line)
 - **Radar** — pipeline health breakdown
 - **Horizontal bar** — pipeline funnel
 
-### Colour Palette
+### Colour Palette (ordered Low → Critical)
 | Label | Hex | Use |
 |-------|-----|-----|
-| Critical | `#dc2626` | Dark red |
-| High | `#ea580c` | Dark orange |
-| Medium | `#3b82f6` | Light blue |
 | Low | `#94a3b8` | Grey |
-| Success/Low Risk | `#16a34a` | Dark green |
+| Medium | `#3b82f6` | Light blue |
+| High | `#ea580c` | Dark orange |
+| Critical | `#dc2626` | Dark red |
+| Low Risk (churn) | `#16a34a` | Dark green |
 
 ### Run Locally
 ```bash
 python -m src.dashboard.app
 # or
 python main.py --dashboard
-# Dashboard at http://localhost:5000
+# Dashboard at http://localhost:5001
 ```

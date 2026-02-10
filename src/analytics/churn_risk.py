@@ -88,7 +88,10 @@ class ChurnPredictor:
         return {
             "total_accounts": len(df),
             "average_risk_score": round(df["Churn_Risk_Score"].mean(), 3),
-            "risk_breakdown": df["Churn_Risk_Level"].value_counts().to_dict(),
+            "risk_breakdown": {
+                level: int((df["Churn_Risk_Level"] == level).sum())
+                for level in ["Low", "Medium", "High"]
+            },
             "high_risk_accounts": df[df["Churn_Risk_Level"] == "High"][
                 ["Name", "Industry", "Churn_Risk_Score"]
             ].to_dict("records"),

@@ -177,13 +177,13 @@ function renderPipelineChart(data) {
 function renderChurnChart(churnSummary) {
     const ctx = document.getElementById('churnChart').getContext('2d');
     const breakdown = churnSummary.risk_breakdown || {};
-    const labels = Object.keys(breakdown);
+    const labels = RISK_ORDER;
     new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: labels,
             datasets: [{
-                data: Object.values(breakdown),
+                data: orderedData(breakdown, RISK_ORDER),
                 backgroundColor: mapColors(labels, RISK_COLORS),
                 borderWidth: 2,
                 borderColor: '#ffffff',

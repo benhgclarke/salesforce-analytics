@@ -120,11 +120,12 @@ left2, right2 = st.columns(2)
 with left2:
     st.subheader("Churn Risk Breakdown")
     risk_bd = data["churn_summary"].get("risk_breakdown", {})
-    risk_colors = {"High": "#dc2626", "Medium": "#3b82f6", "Low": "#16a34a"}
+    risk_order = ["Low", "Medium", "High"]
+    risk_colors = {"Low": "#16a34a", "Medium": "#3b82f6", "High": "#dc2626"}
     fig3 = px.pie(
-        names=list(risk_bd.keys()),
-        values=list(risk_bd.values()),
-        color=list(risk_bd.keys()),
+        names=risk_order,
+        values=[risk_bd.get(k, 0) for k in risk_order],
+        color=risk_order,
         color_discrete_map=risk_colors,
         hole=0.5,
     )

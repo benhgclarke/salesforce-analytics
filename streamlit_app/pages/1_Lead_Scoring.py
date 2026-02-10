@@ -41,10 +41,12 @@ with left:
 with right:
     st.subheader("Priority Breakdown")
     bd = dist.get("priority_breakdown", {})
-    priority_colors = {"Critical": "#dc2626", "High": "#ea580c", "Medium": "#3b82f6", "Low": "#94a3b8"}
+    priority_order = ["Low", "Medium", "High", "Critical"]
+    priority_colors = {"Low": "#94a3b8", "Medium": "#3b82f6", "High": "#ea580c", "Critical": "#dc2626"}
     fig2 = px.pie(
-        names=list(bd.keys()), values=list(bd.values()),
-        color=list(bd.keys()), color_discrete_map=priority_colors,
+        names=priority_order,
+        values=[bd.get(k, 0) for k in priority_order],
+        color=priority_order, color_discrete_map=priority_colors,
         hole=0.5,
     )
     fig2.update_layout(height=350, margin=dict(t=20, b=20))
@@ -53,7 +55,7 @@ with right:
 st.divider()
 st.subheader("Top Scored Leads")
 
-priority_filter = st.selectbox("Filter by Priority", ["All", "Critical", "High", "Medium", "Low"])
+priority_filter = st.selectbox("Filter by Priority", ["All", "Low", "Medium", "High", "Critical"])
 display_df = scored.copy()
 if priority_filter != "All":
     display_df = display_df[display_df["Priority"] == priority_filter]

@@ -28,10 +28,12 @@ left, right = st.columns(2)
 with left:
     st.subheader("Risk Level Distribution")
     risk_bd = churn_summary.get("risk_breakdown", {})
-    risk_colors = {"High": "#dc2626", "Medium": "#3b82f6", "Low": "#16a34a"}
+    risk_order = ["Low", "Medium", "High"]
+    risk_colors = {"Low": "#16a34a", "Medium": "#3b82f6", "High": "#dc2626"}
     fig = px.pie(
-        names=list(risk_bd.keys()), values=list(risk_bd.values()),
-        color=list(risk_bd.keys()), color_discrete_map=risk_colors,
+        names=risk_order,
+        values=[risk_bd.get(k, 0) for k in risk_order],
+        color=risk_order, color_discrete_map=risk_colors,
         hole=0.5,
     )
     fig.update_layout(height=350, margin=dict(t=20, b=20))
@@ -42,7 +44,7 @@ with right:
     if not churn_df.empty:
         grouped = churn_df.groupby("Churn_Risk_Level")["AnnualRevenue"].agg(["sum", "mean", "count"]).reset_index()
         grouped.columns = ["Risk Level", "Total Revenue", "Avg Revenue", "Count"]
-        order = ["High", "Medium", "Low"]
+        order = ["Low", "Medium", "High"]
         grouped["Risk Level"] = pd.Categorical(grouped["Risk Level"], categories=order, ordered=True)
         grouped = grouped.sort_values("Risk Level")
 
@@ -62,7 +64,7 @@ with right:
 st.divider()
 st.subheader("Accounts by Churn Risk")
 
-level_filter = st.selectbox("Filter by Risk Level", ["All", "High", "Medium", "Low"])
+level_filter = st.selectbox("Filter by Risk Level", ["All", "Low", "Medium", "High"])
 display = churn_df.copy()
 if level_filter != "All":
     display = display[display["Churn_Risk_Level"] == level_filter]
