@@ -22,7 +22,7 @@ Streamlit Community Cloud gives you a free shareable URL with no login required 
 3. **Click "New app"** and configure:
    - **Repository**: `benhgclarke/salesforce-analytics`
    - **Branch**: `main`
-   - **Main file path**: `streamlit_app/app.py`
+   - **Main file path**: `streamlit_app/Overview.py`
 
 4. **Click Deploy**. Streamlit builds and hosts it. You get a URL like:
    ```
@@ -32,7 +32,7 @@ Streamlit Community Cloud gives you a free shareable URL with no login required 
 5. **Share the link** — anyone can click it and see the dashboard. No login needed.
 
 ### Pages (one per tab in sidebar)
-- **Dashboard** — Overview with KPIs, doughnut charts, alerts
+- **Overview** — KPIs, treemap charts, alerts
 - **Lead Scoring** — Score distribution, priority breakdown, lead table
 - **Pipeline Health** — Funnel, radar, forecast, risks & recommendations
 - **Churn Risk** — Risk distribution, revenue at risk, account table
@@ -40,7 +40,7 @@ Streamlit Community Cloud gives you a free shareable URL with no login required 
 
 ### Test Locally First
 ```bash
-streamlit run streamlit_app/app.py
+streamlit run streamlit_app/Overview.py
 ```
 Opens at http://localhost:8501
 

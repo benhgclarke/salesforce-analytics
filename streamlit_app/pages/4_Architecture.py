@@ -7,23 +7,46 @@ st.title("🏗️ Architecture & Project Structure")
 
 st.subheader("System Architecture")
 st.code("""
-┌──────────────────┐     ┌─────────────────────┐     ┌──────────────────┐
-│   Salesforce      │     │   Analytics Engine   │     │   Dashboard      │
-│   (REST API)      │────>│   (Python)           │────>│   (Flask + JS)   │
-│                   │     │   - Lead Scoring      │     │   - Charts       │
-│   Objects:        │     │   - Pipeline Health   │     │   - Tables       │
-│   - Leads         │     │   - Churn Prediction  │     │   - KPIs         │
-│   - Opportunities │     └──────────┬────────────┘     └──────────────────┘
-│   - Accounts      │               │
-│   - Cases         │     ┌─────────┴─────────┐
-└──────────────────┘     │                     │
-                   ┌─────┴──────┐     ┌───────┴───────┐
-                   │   AWS       │     │   Azure        │
-                   │  Lambda     │     │  Functions     │
-                   │  S3         │     │  Blob Storage  │
-                   │  EventBridge│     │  App Service   │
-                   │  API Gateway│     │  App Insights  │
-                   └─────────────┘     └────────────────┘
+                         ┌──────────────────────────────────────────────────────────────┐
+                         │                    CLOUD EXECUTION LAYER                      │
+                         │                                                              │
+                         │   ┌─── AWS ──────────────┐   ┌─── Azure ────────────────┐   │
+                         │   │ EventBridge (cron)    │   │ Timer Trigger (cron)     │   │
+                         │   │        │              │   │        │                 │   │
+                         │   │        ▼              │   │        ▼                 │   │
+  ┌──────────────────┐   │   │ Lambda Function ──────┤   │ Azure Function ──────────┤   │
+  │   Salesforce      │   │   │   ┌──────────────┐   │   │   ┌──────────────────┐   │   │
+  │   (REST API)      │───┼──►│   │  Analytics   │   │   │   │  Analytics       │   │   │
+  │                   │   │   │   │  Engine      │   │   │   │  Engine          │   │   │
+  │   Objects:        │   │   │   │ • Lead Score │   │   │   │ • Lead Score     │   │   │
+  │   - Leads         │   │   │   │ • Pipeline   │   │   │   │ • Pipeline       │   │   │
+  │   - Opportunities │   │   │   │ • Churn Risk │   │   │   │ • Churn Risk     │   │   │
+  │   - Accounts      │   │   │   └──────┬───────┘   │   │   └──────┬───────────┘   │   │
+  │   - Cases         │   │   │          │           │   │          │               │   │
+  └──────────────────┘   │   │          ▼           │   │          ▼               │   │
+          ▲              │   │   S3 Bucket           │   │   Blob Storage           │   │
+          │              │   │   (results + CSV)     │   │   (results + CSV)        │   │
+          │              │   │          │           │   │          │               │   │
+          │              │   │   API Gateway         │   │   App Service            │   │
+          │              │   │          │           │   │          │               │   │
+          │              │   └──────────┼───────────┘   └──────────┼───────────────┘   │
+          │              │              │                           │                   │
+          │              └──────────────┼───────────────────────────┼───────────────────┘
+          │                             │                           │
+          │                             ▼                           ▼
+          │              ┌──────────────────────────────────────────────────────────────┐
+          │              │                    PRESENTATION LAYER                         │
+          │              │                                                              │
+          │              │   Flask + Chart.js    Streamlit Cloud    Power BI             │
+          │              │   (local dashboard)   (hosted dashboard) (enterprise BI)     │
+          │              └──────────────────────────────────────────────────────────────┘
+          │
+  ┌───────┴──────────┐
+  │   Automation      │
+  │   - Writeback     │
+  │   - Notifications │
+  │   - SES / Slack   │
+  └──────────────────┘
 """, language="text")
 
 st.divider()
@@ -70,12 +93,14 @@ with right:
 st.divider()
 st.subheader("Data Flow")
 st.code("""
-1. EXTRACT    Salesforce REST API  →  SalesforceClient
-2. TRANSFORM  Analytics Engine     →  Lead Scores, Pipeline Health, Churn Risk
-3. LOAD       Results              →  S3 (AWS) / Blob Storage (Azure)
-4. PRESENT    Dashboard API        →  Chart.js / Plotly / Power BI
-5. ACT        Writeback            →  Salesforce (updated fields, new tasks)
-6. ALERT      Notifications        →  Log / Email (SES) / Slack
+1. TRIGGER    EventBridge (AWS) / Timer Trigger (Azure)  →  Scheduled invocation
+2. EXTRACT    Lambda / Azure Function  →  Salesforce REST API  →  Leads, Opps, Accounts, Cases
+3. TRANSFORM  Analytics Engine (inside function)  →  Lead Scores, Pipeline Health, Churn Risk
+4. STORE      Results  →  S3 Bucket (AWS) / Blob Storage (Azure)  →  JSON + CSV exports
+5. SERVE      API Gateway (AWS) / App Service (Azure)  →  REST endpoints for consumers
+6. PRESENT    Flask + Chart.js / Streamlit Cloud / Power BI  →  Dashboards & reports
+7. ACT        Writeback  →  Salesforce (updated fields, new tasks)
+8. ALERT      Notifications  →  SES (AWS) / Log / Slack
 """, language="text")
 
 st.divider()

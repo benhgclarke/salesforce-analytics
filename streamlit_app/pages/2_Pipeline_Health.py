@@ -9,7 +9,7 @@ import pandas as pd
 
 st.set_page_config(page_title="Pipeline Health", page_icon="📈", layout="wide")
 
-from streamlit_app.app import load_all_data
+from streamlit_app.data_loader import load_all_data
 data = load_all_data()
 pipeline = data["pipeline"]
 funnel = data["funnel"]

@@ -8,7 +8,7 @@ import pandas as pd
 
 st.set_page_config(page_title="Churn Risk", page_icon="⚠️", layout="wide")
 
-from streamlit_app.app import load_all_data
+from streamlit_app.data_loader import load_all_data
 data = load_all_data()
 churn_summary = data["churn_summary"]
 churn_df = data["churn_df"]
