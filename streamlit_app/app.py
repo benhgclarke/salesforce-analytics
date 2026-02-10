@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import streamlit as st
 
 st.set_page_config(
-    page_title="Salesforce Analytics",
+    page_title="Overview",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -87,14 +87,19 @@ left, right = st.columns(2)
 with left:
     st.subheader("Lead Score Distribution")
     ranges = data["dist"].get("score_ranges", {})
-    colors = ["#94a3b8", "#3b82f6", "#ea580c", "#dc2626"]
-    fig = px.pie(
-        names=list(ranges.keys()),
-        values=list(ranges.values()),
-        color_discrete_sequence=colors,
-        hole=0.5,
+    score_order = ["0-30 (Low)", "31-60 (Medium)", "61-80 (High)", "81-100 (Critical)"]
+    score_colors = {"0-30 (Low)": "#94a3b8", "31-60 (Medium)": "#3b82f6", "61-80 (High)": "#ea580c", "81-100 (Critical)": "#dc2626"}
+    ordered_names = [k for k in score_order if k in ranges]
+    ordered_vals = [ranges[k] for k in ordered_names]
+    fig = px.treemap(
+        names=ordered_names,
+        parents=[""] * len(ordered_names),
+        values=ordered_vals,
+        color=ordered_names,
+        color_discrete_map=score_colors,
     )
     fig.update_layout(height=350, margin=dict(t=20, b=20))
+    fig.update_traces(textinfo="label+value+percent root")
     st.plotly_chart(fig, use_container_width=True)
 
 with right:

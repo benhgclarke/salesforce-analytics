@@ -43,13 +43,17 @@ with right:
     bd = dist.get("priority_breakdown", {})
     priority_order = ["Low", "Medium", "High", "Critical"]
     priority_colors = {"Low": "#94a3b8", "Medium": "#3b82f6", "High": "#ea580c", "Critical": "#dc2626"}
-    fig2 = px.pie(
-        names=priority_order,
-        values=[bd.get(k, 0) for k in priority_order],
-        color=priority_order, color_discrete_map=priority_colors,
-        hole=0.5,
+    ordered_names = [k for k in priority_order if bd.get(k, 0) > 0]
+    ordered_vals = [bd[k] for k in ordered_names]
+    fig2 = px.treemap(
+        names=ordered_names,
+        parents=[""] * len(ordered_names),
+        values=ordered_vals,
+        color=ordered_names,
+        color_discrete_map=priority_colors,
     )
     fig2.update_layout(height=350, margin=dict(t=20, b=20))
+    fig2.update_traces(textinfo="label+value+percent root")
     st.plotly_chart(fig2, use_container_width=True)
 
 st.divider()
