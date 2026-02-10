@@ -1,0 +1,239 @@
+{
+  "name": "Salesforce Analytics",
+  "description": "Cloud-Enhanced Salesforce Automation & Analytics data model",
+  "version": "1.0",
+  "data_sources": {
+    "azure_functions": {
+      "description": "Azure Functions HTTP endpoints (production)",
+      "base_url": "https://<your-function-app>.azurewebsites.net/api",
+      "endpoints": {
+        "lead_scores": {
+          "url": "https://<your-function-app>.azurewebsites.net/api/leads/scores",
+          "method": "GET"
+        },
+        "pipeline_health": {
+          "url": "https://<your-function-app>.azurewebsites.net/api/pipeline/health",
+          "method": "GET"
+        },
+        "churn_risk": {
+          "url": "https://<your-function-app>.azurewebsites.net/api/churn/risk",
+          "method": "GET"
+        },
+        "full_analysis": {
+          "url": "https://<your-function-app>.azurewebsites.net/api/analyse",
+          "method": "GET"
+        }
+      }
+    },
+    "local_dashboard": {
+      "description": "Local Flask dashboard API (development)",
+      "base_url": "http://localhost:5000/api",
+      "endpoints": {
+        "dashboard_summary": {
+          "url": "http://localhost:5000/api/dashboard/summary",
+          "method": "GET"
+        },
+        "lead_scores": {
+          "url": "http://localhost:5000/api/leads/scores?limit=500",
+          "method": "GET"
+        },
+        "lead_distribution": {
+          "url": "http://localhost:5000/api/leads/distribution",
+          "method": "GET"
+        },
+        "pipeline_health": {
+          "url": "http://localhost:5000/api/pipeline/health",
+          "method": "GET"
+        },
+        "pipeline_funnel": {
+          "url": "http://localhost:5000/api/pipeline/funnel",
+          "method": "GET"
+        },
+        "churn_risk": {
+          "url": "http://localhost:5000/api/churn/risk",
+          "method": "GET"
+        },
+        "churn_accounts": {
+          "url": "http://localhost:5000/api/churn/accounts?limit=500",
+          "method": "GET"
+        }
+      }
+    },
+    "aws_s3": {
+      "description": "AWS S3 historical data (via Amazon S3 connector)",
+      "bucket": "sf-analytics-dev",
+      "paths": {
+        "lead_scoring": "analytics/lead_scoring/",
+        "pipeline_health": "analytics/pipeline_health/",
+        "churn_prediction": "analytics/churn_prediction/"
+      }
+    },
+    "csv_files": {
+      "description": "Local CSV exports (for offline / demo use)",
+      "files": {
+        "lead_scores": "/Users/benclarke/Documents/Claude Projects/AWS and Azure Project/data/powerbi/lead_scores.csv",
+        "pipeline_funnel": "/Users/benclarke/Documents/Claude Projects/AWS and Azure Project/data/powerbi/pipeline_funnel.csv",
+        "churn_accounts": "/Users/benclarke/Documents/Claude Projects/AWS and Azure Project/data/powerbi/churn_accounts.csv"
+      }
+    }
+  },
+  "tables": [
+    {
+      "name": "LeadScores",
+      "source": "lead_scores",
+      "columns": [
+        {
+          "name": "FirstName",
+          "type": "text"
+        },
+        {
+          "name": "LastName",
+          "type": "text"
+        },
+        {
+          "name": "Company",
+          "type": "text"
+        },
+        {
+          "name": "Industry",
+          "type": "text"
+        },
+        {
+          "name": "Status",
+          "type": "text"
+        },
+        {
+          "name": "LeadSource",
+          "type": "text"
+        },
+        {
+          "name": "Lead_Score",
+          "type": "decimal"
+        },
+        {
+          "name": "Priority",
+          "type": "text"
+        },
+        {
+          "name": "NumberOfEmployees",
+          "type": "integer"
+        },
+        {
+          "name": "AnnualRevenue",
+          "type": "decimal"
+        }
+      ],
+      "measures": [
+        {
+          "name": "Avg Lead Score",
+          "formula": "AVERAGE(LeadScores[Lead_Score])"
+        },
+        {
+          "name": "Critical Count",
+          "formula": "COUNTROWS(FILTER(LeadScores, LeadScores[Priority]=\"Critical\"))"
+        },
+        {
+          "name": "High Count",
+          "formula": "COUNTROWS(FILTER(LeadScores, LeadScores[Priority]=\"High\"))"
+        }
+      ]
+    },
+    {
+      "name": "PipelineFunnel",
+      "source": "pipeline_funnel",
+      "columns": [
+        {
+          "name": "stage",
+          "type": "text"
+        },
+        {
+          "name": "count",
+          "type": "integer"
+        },
+        {
+          "name": "total_value",
+          "type": "decimal"
+        },
+        {
+          "name": "avg_value",
+          "type": "decimal"
+        },
+        {
+          "name": "avg_probability",
+          "type": "decimal"
+        }
+      ],
+      "measures": [
+        {
+          "name": "Total Pipeline",
+          "formula": "SUM(PipelineFunnel[total_value])"
+        },
+        {
+          "name": "Avg Deal Size",
+          "formula": "AVERAGE(PipelineFunnel[avg_value])"
+        }
+      ]
+    },
+    {
+      "name": "ChurnAccounts",
+      "source": "churn_accounts",
+      "columns": [
+        {
+          "name": "Name",
+          "type": "text"
+        },
+        {
+          "name": "Industry",
+          "type": "text"
+        },
+        {
+          "name": "AnnualRevenue",
+          "type": "decimal"
+        },
+        {
+          "name": "Type",
+          "type": "text"
+        },
+        {
+          "name": "Churn_Risk_Score",
+          "type": "decimal"
+        },
+        {
+          "name": "Churn_Risk_Level",
+          "type": "text"
+        }
+      ],
+      "measures": [
+        {
+          "name": "Revenue at Risk",
+          "formula": "SUMX(FILTER(ChurnAccounts, ChurnAccounts[Churn_Risk_Level]=\"High\"), ChurnAccounts[AnnualRevenue])"
+        },
+        {
+          "name": "High Risk Count",
+          "formula": "COUNTROWS(FILTER(ChurnAccounts, ChurnAccounts[Churn_Risk_Level]=\"High\"))"
+        },
+        {
+          "name": "Avg Risk Score",
+          "formula": "AVERAGE(ChurnAccounts[Churn_Risk_Score])"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "description": "Lead industry to churn account industry",
+      "from_table": "LeadScores",
+      "from_column": "Industry",
+      "to_table": "ChurnAccounts",
+      "to_column": "Industry",
+      "type": "many-to-many"
+    }
+  ],
+  "power_query_m": {
+    "description": "Power Query M code snippets for connecting to API endpoints",
+    "lead_scores": "let Source = Json.Document(Web.Contents(\"http://localhost:5000/api/leads/scores?limit=500\")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, \"Column1\", {\"FirstName\",\"LastName\",\"Company\",\"Industry\",\"Lead_Score\",\"Priority\",\"Status\"}) in Expanded",
+    "pipeline_health": "let Source = Json.Document(Web.Contents(\"http://localhost:5000/api/pipeline/health\")), HealthScore = Source[health_score], Forecast = Source[forecast] in HealthScore",
+    "churn_accounts": "let Source = Json.Document(Web.Contents(\"http://localhost:5000/api/churn/accounts?limit=500\")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, \"Column1\", {\"Name\",\"Industry\",\"AnnualRevenue\",\"Type\",\"Churn_Risk_Score\",\"Churn_Risk_Level\"}) in Expanded",
+    "pipeline_funnel": "let Source = Json.Document(Web.Contents(\"http://localhost:5000/api/pipeline/funnel\")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, \"Column1\", {\"stage\",\"count\",\"total_value\",\"avg_value\",\"avg_probability\"}) in Expanded"
+  }
+}

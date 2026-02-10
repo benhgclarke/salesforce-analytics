@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Salesforce Analytics{% endblock %}
+{% block page_title %}Analytics Overview{% endblock %}
+
+{% block content %}
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Total Leads</div>
+        <div class="kpi-value" id="kpi-leads">--</div>
+        <div class="kpi-detail" id="kpi-leads-detail"></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Open Opportunities</div>
+        <div class="kpi-value" id="kpi-opps">--</div>
+        <div class="kpi-detail" id="kpi-opps-detail"></div>
+    </div>
+    <div class="kpi-card accent">
+        <div class="kpi-label">Pipeline Value</div>
+        <div class="kpi-value" id="kpi-pipeline">--</div>
+        <div class="kpi-detail" id="kpi-pipeline-detail"></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Pipeline Health</div>
+        <div class="kpi-value" id="kpi-health">--</div>
+        <div class="kpi-detail" id="kpi-health-detail"></div>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="chart-grid">
+    <div class="chart-card">
+        <h3>Lead Score Distribution</h3>
+        <div class="chart-wrapper"><canvas id="leadDistChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <h3>Pipeline by Stage</h3>
+        <div class="chart-wrapper"><canvas id="pipelineChart"></canvas></div>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="chart-grid">
+    <div class="chart-card">
+        <h3>Churn Risk Breakdown</h3>
+        <div class="chart-wrapper"><canvas id="churnChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <h3>Pipeline Health Breakdown</h3>
+        <div class="chart-wrapper"><canvas id="healthChart"></canvas></div>
+    </div>
+</div>
+
+<!-- Alerts Section -->
+<div class="alerts-section">
+    <h3>Recent Alerts</h3>
+    <div id="alerts-container" class="alerts-list">
+        <p class="placeholder">Loading alerts...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboard();
+});
+
+async function loadDashboard() {
+    try {
+        const response = await fetch('/api/dashboard/summary');
+        const data = await response.json();
+        updateKPIs(data);
+        renderLeadDistChart(data.lead_summary);
+        renderPipelineChart(data);
+        renderChurnChart(data.churn_summary);
+        renderHealthChart(data.pipeline_health);
+        loadAlerts();
+        updateLastUpdated();
+    } catch (err) {
+        console.error('Failed to load dashboard:', err);
+    }
+}
+
+function updateKPIs(data) {
+    const kpis = data.kpis;
+    document.getElementById('kpi-leads').textContent = kpis.total_leads;
+    document.getElementById('kpi-leads-detail').textContent =
+        `Avg score: ${data.lead_summary.average_score || 'N/A'}`;
+
+    document.getElementById('kpi-opps').textContent = kpis.open_opportunities;
+    document.getElementById('kpi-opps-detail').textContent =
+        `${kpis.open_cases} open cases`;
+
+    document.getElementById('kpi-pipeline').textContent =
+        formatCurrency(kpis.total_pipeline_value);
+    const forecast = data.pipeline_forecast;
+    document.getElementById('kpi-pipeline-detail').textContent =
+        `Weighted: ${formatCurrency(forecast.total_weighted || 0)}`;
+
+    const health = data.pipeline_health;
+    document.getElementById('kpi-health').textContent =
+        `${health.score || 0}/100`;
+    document.getElementById('kpi-health-detail').textContent =
+        health.rating || 'N/A';
+}
+
+function renderLeadDistChart(leadSummary) {
+    const ctx = document.getElementById('leadDistChart').getContext('2d');
+    const ranges = leadSummary.score_ranges || {};
+    const labels = Object.keys(ranges);
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: Object.values(ranges),
+                backgroundColor: SCORE_RANGE_COLORS,
+                borderWidth: 2,
+                borderColor: '#ffffff',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '55%',
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+function renderPipelineChart(data) {
+    const ctx = document.getElementById('pipelineChart').getContext('2d');
+    fetch('/api/pipeline/funnel').then(r => r.json()).then(funnel => {
+        const stages = funnel.map(s => s.stage);
+        const values = funnel.map(s => s.total_value);
+        const counts = funnel.map(s => s.count);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: stages,
+                datasets: [{
+                    label: 'Total Value',
+                    data: values,
+                    backgroundColor: '#6366f1',
+                    yAxisID: 'y',
+                }, {
+                    label: 'Deal Count',
+                    data: counts,
+                    type: 'line',
+                    borderColor: '#f97316',
+                    backgroundColor: 'transparent',
+                    yAxisID: 'y1',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        type: 'linear', position: 'left',
+                        ticks: { callback: v => formatCurrency(v) }
+                    },
+                    y1: {
+                        type: 'linear', position: 'right',
+                        grid: { drawOnChartArea: false }
+                    }
+                },
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    });
+}
+
+function renderChurnChart(churnSummary) {
+    const ctx = document.getElementById('churnChart').getContext('2d');
+    const breakdown = churnSummary.risk_breakdown || {};
+    const labels = Object.keys(breakdown);
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: Object.values(breakdown),
+                backgroundColor: mapColors(labels, RISK_COLORS),
+                borderWidth: 2,
+                borderColor: '#ffffff',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '55%',
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+function renderHealthChart(health) {
+    const ctx = document.getElementById('healthChart').getContext('2d');
+    const breakdown = health.breakdown || {};
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['Coverage', 'Distribution', 'Win Rate', 'Velocity'],
+            datasets: [{
+                label: 'Pipeline Health',
+                data: [
+                    breakdown.coverage || 0,
+                    breakdown.distribution || 0,
+                    breakdown.win_rate || 0,
+                    breakdown.velocity || 0,
+                ],
+                backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                borderColor: '#6366f1',
+                pointBackgroundColor: '#6366f1',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { r: { beginAtZero: true, max: 25 } },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+async function loadAlerts() {
+    try {
+        const response = await fetch('/api/alerts');
+        const alerts = await response.json();
+        const container = document.getElementById('alerts-container');
+        if (!alerts || !alerts.length) {
+            container.innerHTML = '<p class="placeholder">No recent alerts</p>';
+            return;
+        }
+        container.innerHTML = alerts.slice(0, 10).map(a => {
+            const severity = (a.priority || 'info').toLowerCase();
+            const cssClass = severity === 'critical' || severity === 'high' ? 'alert-high'
+                           : severity === 'medium' ? 'alert-medium' : 'alert-low';
+            return `<div class="alert ${cssClass}">
+                <strong>${a.type || 'Alert'}</strong>
+                <p>${(a.message || '').substring(0, 200)}</p>
+            </div>`;
+        }).join('');
+    } catch (err) {
+        console.error('Failed to load alerts:', err);
+    }
+}
+</script>
+{% endblock %}

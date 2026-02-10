@@ -1,0 +1,17 @@
+{
+  "total_leads": 100,
+  "average_score": 44.4,
+  "median_score": 36.8,
+  "priority_breakdown": {
+    "Medium": 49,
+    "Low": 32,
+    "Critical": 14,
+    "High": 5
+  },
+  "score_ranges": {
+    "0-30 (Low)": 32,
+    "31-60 (Medium)": 49,
+    "61-80 (High)": 5,
+    "81-100 (Critical)": 14
+  }
+}

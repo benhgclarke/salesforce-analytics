@@ -1,0 +1,32 @@
+{
+  "total_accounts": 25,
+  "average_risk_score": 0.435,
+  "risk_breakdown": {
+    "Low": 16,
+    "Medium": 5,
+    "High": 4
+  },
+  "high_risk_accounts": [
+    {
+      "Name": "Umbrella Ltd",
+      "Industry": "Technology",
+      "Churn_Risk_Score": 0.875
+    },
+    {
+      "Name": "Stark Industries",
+      "Industry": "Technology",
+      "Churn_Risk_Score": 0.869
+    },
+    {
+      "Name": "Acme Corp",
+      "Industry": "Healthcare",
+      "Churn_Risk_Score": 0.85
+    },
+    {
+      "Name": "Initech Solutions",
+      "Industry": "Technology",
+      "Churn_Risk_Score": 0.717
+    }
+  ],
+  "total_revenue_at_risk": 551000000.0
+}

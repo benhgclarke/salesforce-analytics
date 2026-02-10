@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Pipeline Health - Salesforce Analytics{% endblock %}
+{% block page_title %}Pipeline Health Analysis{% endblock %}
+
+{% block content %}
+<!-- Pipeline KPIs -->
+<div class="kpi-grid">
+    <div class="kpi-card accent">
+        <div class="kpi-label">Health Score</div>
+        <div class="kpi-value" id="kpi-score">--</div>
+        <div class="kpi-detail" id="kpi-rating"></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Open Pipeline</div>
+        <div class="kpi-value" id="kpi-open-value">--</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Weighted Forecast</div>
+        <div class="kpi-value" id="kpi-forecast">--</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Win Rate</div>
+        <div class="kpi-value" id="kpi-winrate">--</div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="chart-grid">
+    <div class="chart-card wide">
+        <h3>Pipeline Funnel</h3>
+        <div class="chart-wrapper"><canvas id="funnelChart"></canvas></div>
+    </div>
+</div>
+
+<div class="chart-grid">
+    <div class="chart-card">
+        <h3>Health Score Breakdown</h3>
+        <div class="chart-wrapper"><canvas id="healthRadar"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <h3>Forecast Categories</h3>
+        <div class="chart-wrapper"><canvas id="forecastChart"></canvas></div>
+    </div>
+</div>
+
+<!-- Risks & Recommendations -->
+<div class="info-grid">
+    <div class="info-card">
+        <h3>Risk Indicators</h3>
+        <div id="risks-container">
+            <p class="placeholder">Loading...</p>
+        </div>
+    </div>
+    <div class="info-card">
+        <h3>Recommendations</h3>
+        <div id="recs-container">
+            <p class="placeholder">Loading...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadPipelineData();
+});
+
+async function loadPipelineData() {
+    try {
+        const [healthResponse, funnelResponse] = await Promise.all([
+            fetch('/api/pipeline/health'),
+            fetch('/api/pipeline/funnel'),
+        ]);
+        const health = await healthResponse.json();
+        const funnel = await funnelResponse.json();
+
+        updatePipelineKPIs(health);
+        renderFunnelChart(funnel);
+        renderHealthRadar(health.health_score);
+        renderForecastChart(health.forecast);
+        renderRisks(health.risk_indicators);
+        renderRecommendations(health.recommendations);
+        updateLastUpdated();
+    } catch (err) {
+        console.error('Failed to load pipeline data:', err);
+    }
+}
+
+function updatePipelineKPIs(health) {
+    const hs = health.health_score || {};
+    document.getElementById('kpi-score').textContent = `${hs.score || 0}/100`;
+    document.getElementById('kpi-rating').textContent = hs.rating || 'N/A';
+
+    const vm = health.velocity_metrics || {};
+    document.getElementById('kpi-open-value').textContent =
+        formatCurrency(vm.open_pipeline_value || 0);
+    document.getElementById('kpi-forecast').textContent =
+        formatCurrency(health.forecast?.total_weighted || 0);
+
+    const won = vm.closed_won_count || 0;
+    const total = won + (health.stage_summary || [])
+        .filter(s => s.stage === 'Closed Lost')
+        .reduce((sum, s) => sum + s.count, 0);
+    const winRate = total > 0 ? ((won / total) * 100).toFixed(0) : 'N/A';
+    document.getElementById('kpi-winrate').textContent =
+        winRate !== 'N/A' ? `${winRate}%` : winRate;
+}
+
+function renderFunnelChart(funnel) {
+    const ctx = document.getElementById('funnelChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: funnel.map(s => s.stage),
+            datasets: [{
+                label: 'Total Value',
+                data: funnel.map(s => s.total_value),
+                backgroundColor: [
+                    '#818cf8', '#6366f1', '#4f46e5', '#4338ca',
+                    '#3730a3', '#16a34a', '#dc2626',
+                ],
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { callback: v => formatCurrency(v) } }
+            }
+        }
+    });
+}
+
+function renderHealthRadar(health) {
+    const ctx = document.getElementById('healthRadar').getContext('2d');
+    const bd = health.breakdown || {};
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['Coverage', 'Stage Distribution', 'Win Rate', 'Velocity'],
+            datasets: [{
+                label: 'Score (out of 25)',
+                data: [bd.coverage || 0, bd.distribution || 0, bd.win_rate || 0, bd.velocity || 0],
+                backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                borderColor: '#6366f1',
+                pointBackgroundColor: '#6366f1',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { r: { beginAtZero: true, max: 25 } },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+function renderForecastChart(forecast) {
+    const ctx = document.getElementById('forecastChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Commit', 'Best Case', 'Pipeline'],
+            datasets: [{
+                data: [forecast.commit || 0, forecast.best_case || 0, forecast.pipeline || 0],
+                backgroundColor: [FORECAST_COLORS.commit, FORECAST_COLORS.best_case, FORECAST_COLORS.pipeline],
+                borderWidth: 2,
+                borderColor: '#ffffff',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '55%',
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+function renderRisks(risks) {
+    const container = document.getElementById('risks-container');
+    if (!risks || !risks.length) {
+        container.innerHTML = '<p class="success-text">No significant risks identified</p>';
+        return;
+    }
+    container.innerHTML = risks.map(r => `
+        <div class="alert alert-${r.severity?.toLowerCase() || 'medium'}">
+            <strong>${r.type}</strong>
+            <p>${r.message}</p>
+        </div>
+    `).join('');
+}
+
+function renderRecommendations(recs) {
+    const container = document.getElementById('recs-container');
+    if (!recs || !recs.length) {
+        container.innerHTML = '<p>No recommendations at this time.</p>';
+        return;
+    }
+    container.innerHTML = '<ul>' +
+        recs.map(r => `<li>${r}</li>`).join('') +
+        '</ul>';
+}
+</script>
+{% endblock %}

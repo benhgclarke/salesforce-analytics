@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Salesforce Analytics{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>SF Analytics</h2>
+            <p class="subtitle">Cloud-Enhanced</p>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">Dashboard</a></li>
+            <li><a href="/leads" class="{% if request.path == '/leads' %}active{% endif %}">Lead Scoring</a></li>
+            <li><a href="/pipeline" class="{% if request.path == '/pipeline' %}active{% endif %}">Pipeline Health</a></li>
+            <li><a href="/churn" class="{% if request.path == '/churn' %}active{% endif %}">Churn Risk</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="status-badge" id="data-status">
+                <span class="status-dot"></span>
+                Mock Data Mode
+            </div>
+        </div>
+    </nav>
+
+    <main class="content">
+        <header class="content-header">
+            <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="refreshData()">Refresh</button>
+                <span class="last-updated" id="last-updated"></span>
+            </div>
+        </header>
+
+        <div class="content-body">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

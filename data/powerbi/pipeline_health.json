@@ -1,0 +1,90 @@
+{
+  "stage_summary": [
+    {
+      "stage": "Prospecting",
+      "count": 8,
+      "total_value": 2610000.0,
+      "avg_value": 326250.0,
+      "weighted_value": 261000.0
+    },
+    {
+      "stage": "Qualification",
+      "count": 9,
+      "total_value": 3210000.0,
+      "avg_value": 356666.6666666667,
+      "weighted_value": 802500.0
+    },
+    {
+      "stage": "Needs Analysis",
+      "count": 5,
+      "total_value": 1060000.0,
+      "avg_value": 212000.0,
+      "weighted_value": 530000.0
+    },
+    {
+      "stage": "Proposal",
+      "count": 6,
+      "total_value": 1910000.0,
+      "avg_value": 318333.3333333333,
+      "weighted_value": 1241500.0
+    },
+    {
+      "stage": "Negotiation",
+      "count": 12,
+      "total_value": 2850000.0,
+      "avg_value": 237500.0,
+      "weighted_value": 2280000.0
+    },
+    {
+      "stage": "Closed Won",
+      "count": 8,
+      "total_value": 2250000.0,
+      "avg_value": 281250.0,
+      "weighted_value": 2250000.0
+    },
+    {
+      "stage": "Closed Lost",
+      "count": 12,
+      "total_value": 3230000.0,
+      "avg_value": 269166.6666666667,
+      "weighted_value": 0.0
+    }
+  ],
+  "velocity_metrics": {
+    "avg_days_in_current_stage": 23.233333333333334,
+    "median_days_in_stage": 21.0,
+    "open_deals": 40,
+    "open_pipeline_value": 11640000.0,
+    "closed_won_count": 8,
+    "closed_won_value": 2250000.0,
+    "avg_deal_size": 281250.0
+  },
+  "forecast": {
+    "best_case": 1060000.0,
+    "commit": 4760000.0,
+    "pipeline": 5820000.0,
+    "total_weighted": 5115000.0
+  },
+  "health_score": {
+    "score": 61.2,
+    "rating": "Good",
+    "breakdown": {
+      "coverage": 25.0,
+      "distribution": 10.8,
+      "win_rate": 10.0,
+      "velocity": 15.3
+    }
+  },
+  "risk_indicators": [
+    {
+      "type": "Stalled Deals",
+      "severity": "High",
+      "count": 14,
+      "value": 3900000.0,
+      "message": "14 deals stalled (>30 days in current stage), worth \u00a33,900,000"
+    }
+  ],
+  "recommendations": [
+    "Review 14 stalled deals \u2014 consider re-engagement campaigns or pipeline clean-up."
+  ]
+}

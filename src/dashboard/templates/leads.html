@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Lead Scoring - Salesforce Analytics{% endblock %}
+{% block page_title %}Lead Scoring & Prioritisation{% endblock %}
+
+{% block content %}
+<!-- Lead KPIs -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Total Leads Scored</div>
+        <div class="kpi-value" id="kpi-total">--</div>
+    </div>
+    <div class="kpi-card accent">
+        <div class="kpi-label">Critical Priority</div>
+        <div class="kpi-value" id="kpi-critical">--</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">High Priority</div>
+        <div class="kpi-value" id="kpi-high">--</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Average Score</div>
+        <div class="kpi-value" id="kpi-avg">--</div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="chart-grid">
+    <div class="chart-card">
+        <h3>Score Distribution</h3>
+        <div class="chart-wrapper"><canvas id="scoreDistChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <h3>Priority Breakdown</h3>
+        <div class="chart-wrapper"><canvas id="priorityChart"></canvas></div>
+    </div>
+</div>
+
+<!-- Lead Table -->
+<div class="table-section">
+    <div class="table-header">
+        <h3>Top Scored Leads</h3>
+        <div class="table-filters">
+            <select id="priority-filter" onchange="filterLeads()">
+                <option value="">All Priorities</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+        </div>
+    </div>
+    <table class="data-table" id="leads-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Company</th>
+                <th>Industry</th>
+                <th>Source</th>
+                <th>Score</th>
+                <th>Priority</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="leads-tbody">
+            <tr><td colspan="7" class="placeholder">Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadLeadData();
+});
+
+async function loadLeadData() {
+    try {
+        const [distResponse, leadsResponse] = await Promise.all([
+            fetch('/api/leads/distribution'),
+            fetch('/api/leads/scores?limit=100'),
+        ]);
+        const distribution = await distResponse.json();
+        const leads = await leadsResponse.json();
+
+        updateLeadKPIs(distribution);
+        renderScoreDistChart(distribution);
+        renderPriorityChart(distribution);
+        renderLeadsTable(leads);
+        updateLastUpdated();
+    } catch (err) {
+        console.error('Failed to load lead data:', err);
+    }
+}
+
+function updateLeadKPIs(dist) {
+    document.getElementById('kpi-total').textContent = dist.total_leads;
+    document.getElementById('kpi-critical').textContent =
+        dist.priority_breakdown?.Critical || 0;
+    document.getElementById('kpi-high').textContent =
+        dist.priority_breakdown?.High || 0;
+    document.getElementById('kpi-avg').textContent = dist.average_score;
+}
+
+function renderScoreDistChart(dist) {
+    const ctx = document.getElementById('scoreDistChart').getContext('2d');
+    const ranges = dist.score_ranges || {};
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(ranges),
+            datasets: [{
+                label: 'Number of Leads',
+                data: Object.values(ranges),
+                backgroundColor: SCORE_RANGE_COLORS,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+
+function renderPriorityChart(dist) {
+    const ctx = document.getElementById('priorityChart').getContext('2d');
+    const breakdown = dist.priority_breakdown || {};
+    const labels = Object.keys(breakdown);
+    const priorityColors = {Critical: COLORS.critical, High: COLORS.high, Medium: COLORS.medium, Low: COLORS.low};
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: Object.values(breakdown),
+                backgroundColor: mapColors(labels, priorityColors),
+                borderWidth: 2,
+                borderColor: '#ffffff',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '55%',
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+function renderLeadsTable(leads) {
+    const tbody = document.getElementById('leads-tbody');
+    if (!leads.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="placeholder">No leads found</td></tr>';
+        return;
+    }
+    tbody.innerHTML = leads.map(lead => `
+        <tr>
+            <td>${lead.FirstName || ''} ${lead.LastName || ''}</td>
+            <td>${lead.Company || ''}</td>
+            <td>${lead.Industry || ''}</td>
+            <td>${lead.LeadSource || ''}</td>
+            <td><strong>${lead.Lead_Score || 0}</strong></td>
+            <td><span class="badge badge-${(lead.Priority || 'Low').toLowerCase()}">${lead.Priority || 'N/A'}</span></td>
+            <td>${lead.Status || ''}</td>
+        </tr>
+    `).join('');
+}
+
+async function filterLeads() {
+    const priority = document.getElementById('priority-filter').value;
+    const url = priority
+        ? `/api/leads/scores?priority=${priority}&limit=100`
+        : '/api/leads/scores?limit=100';
+    const response = await fetch(url);
+    const leads = await response.json();
+    renderLeadsTable(leads);
+}
+</script>
+{% endblock %}

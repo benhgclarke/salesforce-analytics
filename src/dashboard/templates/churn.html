@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Churn Risk - Salesforce Analytics{% endblock %}
+{% block page_title %}Customer Churn Risk Analysis{% endblock %}
+
+{% block content %}
+<!-- Churn KPIs -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Total Accounts</div>
+        <div class="kpi-value" id="kpi-total">--</div>
+    </div>
+    <div class="kpi-card accent">
+        <div class="kpi-label">High Risk</div>
+        <div class="kpi-value" id="kpi-high-risk">--</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Revenue at Risk</div>
+        <div class="kpi-value" id="kpi-revenue">--</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Avg Risk Score</div>
+        <div class="kpi-value" id="kpi-avg-risk">--</div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="chart-grid">
+    <div class="chart-card">
+        <h3>Risk Level Distribution</h3>
+        <div class="chart-wrapper"><canvas id="riskDistChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <h3>Revenue at Risk by Level</h3>
+        <div class="chart-wrapper"><canvas id="revenueRiskChart"></canvas></div>
+        <div id="avg-revenue-container" style="margin-top: 16px;">
+            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text);">Average Revenue by Risk Level</h4>
+            <table class="avg-revenue-table" id="avg-revenue-table">
+                <thead><tr><th>Risk Level</th><th>Avg Revenue</th><th>Count</th></tr></thead>
+                <tbody id="avg-revenue-tbody">
+                    <tr><td colspan="3" class="placeholder">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- High Risk Accounts Table -->
+<div class="table-section">
+    <div class="table-header">
+        <h3>Accounts by Churn Risk</h3>
+        <div class="table-filters">
+            <select id="risk-filter" onchange="filterAccounts()">
+                <option value="">All Levels</option>
+                <option value="High">High Risk</option>
+                <option value="Medium">Medium Risk</option>
+                <option value="Low">Low Risk</option>
+            </select>
+        </div>
+    </div>
+    <table class="data-table" id="accounts-table">
+        <thead>
+            <tr>
+                <th>Account</th>
+                <th>Industry</th>
+                <th>Annual Revenue</th>
+                <th>Type</th>
+                <th>Risk Score</th>
+                <th>Risk Level</th>
+            </tr>
+        </thead>
+        <tbody id="accounts-tbody">
+            <tr><td colspan="6" class="placeholder">Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadChurnData();
+});
+
+async function loadChurnData() {
+    try {
+        const [summaryResponse, accountsResponse] = await Promise.all([
+            fetch('/api/churn/risk'),
+            fetch('/api/churn/accounts?limit=50'),
+        ]);
+        const summary = await summaryResponse.json();
+        const accounts = await accountsResponse.json();
+
+        updateChurnKPIs(summary);
+        renderRiskDistChart(summary);
+        renderRevenueRiskChart(accounts);
+        renderAccountsTable(accounts);
+        updateLastUpdated();
+    } catch (err) {
+        console.error('Failed to load churn data:', err);
+    }
+}
+
+function updateChurnKPIs(summary) {
+    document.getElementById('kpi-total').textContent = summary.total_accounts || 0;
+    document.getElementById('kpi-high-risk').textContent =
+        summary.risk_breakdown?.High || 0;
+    document.getElementById('kpi-revenue').textContent =
+        formatCurrency(summary.total_revenue_at_risk || 0);
+    document.getElementById('kpi-avg-risk').textContent =
+        (summary.average_risk_score || 0).toFixed(2);
+}
+
+function renderRiskDistChart(summary) {
+    const ctx = document.getElementById('riskDistChart').getContext('2d');
+    const breakdown = summary.risk_breakdown || {};
+    const labels = ['High', 'Medium', 'Low'];
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: [breakdown.High || 0, breakdown.Medium || 0, breakdown.Low || 0],
+                backgroundColor: mapColors(labels, RISK_COLORS),
+                borderWidth: 2,
+                borderColor: '#ffffff',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '55%',
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+function renderRevenueRiskChart(accounts) {
+    const ctx = document.getElementById('revenueRiskChart').getContext('2d');
+    const grouped = { High: 0, Medium: 0, Low: 0 };
+    const counts = { High: 0, Medium: 0, Low: 0 };
+    accounts.forEach(a => {
+        const level = a.Churn_Risk_Level || 'Low';
+        grouped[level] = (grouped[level] || 0) + (a.AnnualRevenue || 0);
+        counts[level] = (counts[level] || 0) + 1;
+    });
+
+    const labels = ['High', 'Medium', 'Low'];
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Revenue at Risk',
+                data: [grouped.High, grouped.Medium, grouped.Low],
+                backgroundColor: mapColors(labels, RISK_COLORS),
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { ticks: { callback: v => formatCurrency(v) } }
+            }
+        }
+    });
+
+    // Populate average revenue table
+    const tbody = document.getElementById('avg-revenue-tbody');
+    tbody.innerHTML = labels.map(level => {
+        const count = counts[level] || 0;
+        const avg = count > 0 ? grouped[level] / count : 0;
+        const badgeClass = level.toLowerCase();
+        return `<tr>
+            <td><span class="badge badge-${badgeClass}">${level}</span></td>
+            <td><strong>${formatCurrency(avg)}</strong></td>
+            <td>${count}</td>
+        </tr>`;
+    }).join('');
+}
+
+function renderAccountsTable(accounts) {
+    const tbody = document.getElementById('accounts-tbody');
+    if (!accounts.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="placeholder">No accounts found</td></tr>';
+        return;
+    }
+    tbody.innerHTML = accounts.map(a => `
+        <tr>
+            <td>${a.Name || ''}</td>
+            <td>${a.Industry || ''}</td>
+            <td>${formatCurrency(a.AnnualRevenue || 0)}</td>
+            <td>${a.Type || ''}</td>
+            <td><strong>${(a.Churn_Risk_Score || 0).toFixed(3)}</strong></td>
+            <td><span class="badge badge-${(a.Churn_Risk_Level || 'low').toLowerCase()}">${a.Churn_Risk_Level || 'N/A'}</span></td>
+        </tr>
+    `).join('');
+}
+
+async function filterAccounts() {
+    const level = document.getElementById('risk-filter').value;
+    const url = level
+        ? `/api/churn/accounts?level=${level}&limit=50`
+        : '/api/churn/accounts?limit=50';
+    const response = await fetch(url);
+    const accounts = await response.json();
+    renderAccountsTable(accounts);
+}
+</script>
+{% endblock %}
