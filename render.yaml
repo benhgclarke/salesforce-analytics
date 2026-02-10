@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: salesforce-analytics-api
+    runtime: python
+    buildCommand: pip install -r deploy/api/requirements.txt
+    startCommand: gunicorn deploy.api.app:app --bind 0.0.0.0:$PORT --timeout 120
+    envVars:
+      - key: USE_MOCK_DATA
+        value: "true"
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+    plan: free
+    autoDeploy: true

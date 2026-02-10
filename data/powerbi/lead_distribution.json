@@ -3,10 +3,10 @@
   "average_score": 44.4,
   "median_score": 36.8,
   "priority_breakdown": {
-    "Medium": 49,
     "Low": 32,
-    "Critical": 14,
-    "High": 5
+    "Medium": 49,
+    "High": 5,
+    "Critical": 14
   },
   "score_ranges": {
     "0-30 (Low)": 32,

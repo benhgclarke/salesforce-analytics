@@ -3,6 +3,40 @@
   "description": "Cloud-Enhanced Salesforce Automation & Analytics data model",
   "version": "1.0",
   "data_sources": {
+    "render_api": {
+      "description": "Render.com hosted API (free tier \u2014 public URL)",
+      "base_url": "https://salesforce-analytics-api.onrender.com/api",
+      "endpoints": {
+        "dashboard_summary": {
+          "url": "https://salesforce-analytics-api.onrender.com/api/dashboard/summary",
+          "method": "GET"
+        },
+        "lead_scores": {
+          "url": "https://salesforce-analytics-api.onrender.com/api/leads/scores?limit=500",
+          "method": "GET"
+        },
+        "lead_distribution": {
+          "url": "https://salesforce-analytics-api.onrender.com/api/leads/distribution",
+          "method": "GET"
+        },
+        "pipeline_health": {
+          "url": "https://salesforce-analytics-api.onrender.com/api/pipeline/health",
+          "method": "GET"
+        },
+        "pipeline_funnel": {
+          "url": "https://salesforce-analytics-api.onrender.com/api/pipeline/funnel",
+          "method": "GET"
+        },
+        "churn_risk": {
+          "url": "https://salesforce-analytics-api.onrender.com/api/churn/risk",
+          "method": "GET"
+        },
+        "churn_accounts": {
+          "url": "https://salesforce-analytics-api.onrender.com/api/churn/accounts?limit=500",
+          "method": "GET"
+        }
+      }
+    },
     "azure_functions": {
       "description": "Azure Functions HTTP endpoints (production)",
       "base_url": "https://<your-function-app>.azurewebsites.net/api",
@@ -27,34 +61,34 @@
     },
     "local_dashboard": {
       "description": "Local Flask dashboard API (development)",
-      "base_url": "http://localhost:5000/api",
+      "base_url": "http://localhost:5001/api",
       "endpoints": {
         "dashboard_summary": {
-          "url": "http://localhost:5000/api/dashboard/summary",
+          "url": "http://localhost:5001/api/dashboard/summary",
           "method": "GET"
         },
         "lead_scores": {
-          "url": "http://localhost:5000/api/leads/scores?limit=500",
+          "url": "http://localhost:5001/api/leads/scores?limit=500",
           "method": "GET"
         },
         "lead_distribution": {
-          "url": "http://localhost:5000/api/leads/distribution",
+          "url": "http://localhost:5001/api/leads/distribution",
           "method": "GET"
         },
         "pipeline_health": {
-          "url": "http://localhost:5000/api/pipeline/health",
+          "url": "http://localhost:5001/api/pipeline/health",
           "method": "GET"
         },
         "pipeline_funnel": {
-          "url": "http://localhost:5000/api/pipeline/funnel",
+          "url": "http://localhost:5001/api/pipeline/funnel",
           "method": "GET"
         },
         "churn_risk": {
-          "url": "http://localhost:5000/api/churn/risk",
+          "url": "http://localhost:5001/api/churn/risk",
           "method": "GET"
         },
         "churn_accounts": {
-          "url": "http://localhost:5000/api/churn/accounts?limit=500",
+          "url": "http://localhost:5001/api/churn/accounts?limit=500",
           "method": "GET"
         }
       }
@@ -230,10 +264,11 @@
     }
   ],
   "power_query_m": {
-    "description": "Power Query M code snippets for connecting to API endpoints",
-    "lead_scores": "let Source = Json.Document(Web.Contents(\"http://localhost:5000/api/leads/scores?limit=500\")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, \"Column1\", {\"FirstName\",\"LastName\",\"Company\",\"Industry\",\"Lead_Score\",\"Priority\",\"Status\"}) in Expanded",
-    "pipeline_health": "let Source = Json.Document(Web.Contents(\"http://localhost:5000/api/pipeline/health\")), HealthScore = Source[health_score], Forecast = Source[forecast] in HealthScore",
-    "churn_accounts": "let Source = Json.Document(Web.Contents(\"http://localhost:5000/api/churn/accounts?limit=500\")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, \"Column1\", {\"Name\",\"Industry\",\"AnnualRevenue\",\"Type\",\"Churn_Risk_Score\",\"Churn_Risk_Level\"}) in Expanded",
-    "pipeline_funnel": "let Source = Json.Document(Web.Contents(\"http://localhost:5000/api/pipeline/funnel\")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, \"Column1\", {\"stage\",\"count\",\"total_value\",\"avg_value\",\"avg_probability\"}) in Expanded"
+    "description": "Power Query M code snippets \u2014 replace BASE_URL with your Render URL",
+    "note": "Replace https://salesforce-analytics-api.onrender.com with your actual Render URL after deployment",
+    "lead_scores": "let Source = Json.Document(Web.Contents(\"https://salesforce-analytics-api.onrender.com/api/leads/scores?limit=500\")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, \"Column1\", {\"FirstName\",\"LastName\",\"Company\",\"Industry\",\"Lead_Score\",\"Priority\",\"Status\"}) in Expanded",
+    "pipeline_health": "let Source = Json.Document(Web.Contents(\"https://salesforce-analytics-api.onrender.com/api/pipeline/health\")), HealthScore = Source[health_score], Forecast = Source[forecast] in HealthScore",
+    "churn_accounts": "let Source = Json.Document(Web.Contents(\"https://salesforce-analytics-api.onrender.com/api/churn/accounts?limit=500\")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, \"Column1\", {\"Name\",\"Industry\",\"AnnualRevenue\",\"Type\",\"Churn_Risk_Score\",\"Churn_Risk_Level\"}) in Expanded",
+    "pipeline_funnel": "let Source = Json.Document(Web.Contents(\"https://salesforce-analytics-api.onrender.com/api/pipeline/funnel\")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, \"Column1\", {\"stage\",\"count\",\"total_value\",\"avg_value\",\"avg_probability\"}) in Expanded"
   }
 }

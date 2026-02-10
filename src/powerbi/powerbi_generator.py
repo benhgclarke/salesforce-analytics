@@ -97,14 +97,28 @@ def generate_powerbi_exports():
 
 def generate_powerbi_model(output_dir):
     """Generate a Power BI data model definition."""
+    base_url_render = "https://salesforce-analytics-api.onrender.com/api"
     base_url_azure = "https://<your-function-app>.azurewebsites.net/api"
-    base_url_local = "http://localhost:5000/api"
+    base_url_local = "http://localhost:5001/api"
 
     model = {
         "name": "Salesforce Analytics",
         "description": "Cloud-Enhanced Salesforce Automation & Analytics data model",
         "version": "1.0",
         "data_sources": {
+            "render_api": {
+                "description": "Render.com hosted API (free tier — public URL)",
+                "base_url": base_url_render,
+                "endpoints": {
+                    "dashboard_summary": {"url": f"{base_url_render}/dashboard/summary", "method": "GET"},
+                    "lead_scores": {"url": f"{base_url_render}/leads/scores?limit=500", "method": "GET"},
+                    "lead_distribution": {"url": f"{base_url_render}/leads/distribution", "method": "GET"},
+                    "pipeline_health": {"url": f"{base_url_render}/pipeline/health", "method": "GET"},
+                    "pipeline_funnel": {"url": f"{base_url_render}/pipeline/funnel", "method": "GET"},
+                    "churn_risk": {"url": f"{base_url_render}/churn/risk", "method": "GET"},
+                    "churn_accounts": {"url": f"{base_url_render}/churn/accounts?limit=500", "method": "GET"},
+                },
+            },
             "azure_functions": {
                 "description": "Azure Functions HTTP endpoints (production)",
                 "base_url": base_url_azure,
@@ -212,11 +226,12 @@ def generate_powerbi_model(output_dir):
             }
         ],
         "power_query_m": {
-            "description": "Power Query M code snippets for connecting to API endpoints",
-            "lead_scores": 'let Source = Json.Document(Web.Contents("http://localhost:5000/api/leads/scores?limit=500")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, "Column1", {"FirstName","LastName","Company","Industry","Lead_Score","Priority","Status"}) in Expanded',
-            "pipeline_health": 'let Source = Json.Document(Web.Contents("http://localhost:5000/api/pipeline/health")), HealthScore = Source[health_score], Forecast = Source[forecast] in HealthScore',
-            "churn_accounts": 'let Source = Json.Document(Web.Contents("http://localhost:5000/api/churn/accounts?limit=500")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, "Column1", {"Name","Industry","AnnualRevenue","Type","Churn_Risk_Score","Churn_Risk_Level"}) in Expanded',
-            "pipeline_funnel": 'let Source = Json.Document(Web.Contents("http://localhost:5000/api/pipeline/funnel")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, "Column1", {"stage","count","total_value","avg_value","avg_probability"}) in Expanded',
+            "description": "Power Query M code snippets — replace BASE_URL with your Render URL",
+            "note": "Replace https://salesforce-analytics-api.onrender.com with your actual Render URL after deployment",
+            "lead_scores": f'let Source = Json.Document(Web.Contents("{base_url_render}/leads/scores?limit=500")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, "Column1", {{"FirstName","LastName","Company","Industry","Lead_Score","Priority","Status"}}) in Expanded',
+            "pipeline_health": f'let Source = Json.Document(Web.Contents("{base_url_render}/pipeline/health")), HealthScore = Source[health_score], Forecast = Source[forecast] in HealthScore',
+            "churn_accounts": f'let Source = Json.Document(Web.Contents("{base_url_render}/churn/accounts?limit=500")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, "Column1", {{"Name","Industry","AnnualRevenue","Type","Churn_Risk_Score","Churn_Risk_Level"}}) in Expanded',
+            "pipeline_funnel": f'let Source = Json.Document(Web.Contents("{base_url_render}/pipeline/funnel")), AsTable = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error), Expanded = Table.ExpandRecordColumn(AsTable, "Column1", {{"stage","count","total_value","avg_value","avg_probability"}}) in Expanded',
         },
     }
 

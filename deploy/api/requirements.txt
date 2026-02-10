@@ -1,0 +1,10 @@
+# Deployable API — minimal requirements
+flask>=3.0.0
+flask-cors>=4.0.0
+gunicorn>=21.2.0
+pandas>=2.2.0
+numpy>=2.0.0
+python-dotenv>=1.0.0
+python-dateutil>=2.8.2
+simple-salesforce>=1.12.6
+requests>=2.31.0
