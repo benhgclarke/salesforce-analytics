@@ -1,4 +1,4 @@
-"""Pipeline Health page."""
+"""Pipeline Health page — purple gradient funnel."""
 
 import streamlit as st
 import plotly.express as px
