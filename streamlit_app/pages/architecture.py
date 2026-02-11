@@ -1,12 +1,13 @@
 """Architecture & Project Structure page."""
+
 import streamlit as st
 
-st.set_page_config(page_title="Architecture", page_icon="🏗️", layout="wide")
 
-st.title("🏗️ Architecture & Project Structure")
+def show_architecture():
+    st.title("🏗️ Architecture & Project Structure")
 
-st.subheader("System Architecture")
-st.code("""
+    st.subheader("System Architecture")
+    st.code("""
                          ┌──────────────────────────────────────────────────────────────┐
                          │                    CLOUD EXECUTION LAYER                      │
                          │                                                              │
@@ -49,13 +50,13 @@ st.code("""
   └──────────────────┘
 """, language="text")
 
-st.divider()
+    st.divider()
 
-left, right = st.columns(2)
+    left, right = st.columns(2)
 
-with left:
-    st.subheader("📂 Where Files Live")
-    st.markdown("""
+    with left:
+        st.subheader("📂 Where Files Live")
+        st.markdown("""
 | Component | Location |
 |-----------|----------|
 | Salesforce client | `src/salesforce/client.py` |
@@ -72,11 +73,11 @@ with left:
 | SF Writeback | `src/automation/salesforce_writeback.py` |
 | Terraform (AWS) | `infrastructure/aws/main.tf` |
 | Bicep (Azure) | `infrastructure/azure/main.bicep` |
-    """)
+        """)
 
-with right:
-    st.subheader("🔧 Technology Stack")
-    st.markdown("""
+    with right:
+        st.subheader("🔧 Technology Stack")
+        st.markdown("""
 | Layer | Technology |
 |-------|-----------|
 | Language | Python 3.11+ |
@@ -88,11 +89,11 @@ with right:
 | IaC | Terraform (AWS), Bicep (Azure) |
 | Testing | pytest (53 tests, all passing) |
 | Visualisation | Plotly, Chart.js |
-    """)
+        """)
 
-st.divider()
-st.subheader("Data Flow")
-st.code("""
+    st.divider()
+    st.subheader("Data Flow")
+    st.code("""
 1. TRIGGER    EventBridge (AWS) / Timer Trigger (Azure)  →  Scheduled invocation
 2. EXTRACT    Lambda / Azure Function  →  Salesforce REST API  →  Leads, Opps, Accounts, Cases
 3. TRANSFORM  Analytics Engine (inside function)  →  Lead Scores, Pipeline Health, Churn Risk
@@ -103,47 +104,47 @@ st.code("""
 8. ALERT      Notifications  →  SES (AWS) / Log / Slack
 """, language="text")
 
-st.divider()
-st.subheader("Analytics Models")
+    st.divider()
+    st.subheader("Analytics Models")
 
-tab1, tab2, tab3 = st.tabs(["Lead Scoring", "Pipeline Health", "Churn Prediction"])
+    tab1, tab2, tab3 = st.tabs(["Lead Scoring", "Pipeline Health", "Churn Prediction"])
 
-with tab1:
-    st.markdown("""
-    **Weighted Composite Score (0-100)**
+    with tab1:
+        st.markdown("""
+        **Weighted Composite Score (0-100)**
 
-    | Factor | Weight | Signal |
-    |--------|--------|--------|
-    | Company Size | 20% | Employee count (log scale) |
-    | Engagement | 25% | Web visits + content downloads |
-    | Industry Match | 15% | Target industry list |
-    | Budget Range | 20% | Annual revenue as proxy |
-    | Response Time | 10% | Days since last activity |
-    | Email Activity | 10% | Email open count |
+        | Factor | Weight | Signal |
+        |--------|--------|--------|
+        | Company Size | 20% | Employee count (log scale) |
+        | Engagement | 25% | Web visits + content downloads |
+        | Industry Match | 15% | Target industry list |
+        | Budget Range | 20% | Annual revenue as proxy |
+        | Response Time | 10% | Days since last activity |
+        | Email Activity | 10% | Email open count |
 
-    **Priority**: Critical (80+), High (60-79), Medium (40-59), Low (<40)
-    """)
+        **Priority**: Critical (80+), High (60-79), Medium (40-59), Low (<40)
+        """)
 
-with tab2:
-    st.markdown("""
-    **Four-Factor Assessment (each 25 points)**
+    with tab2:
+        st.markdown("""
+        **Four-Factor Assessment (each 25 points)**
 
-    - **Coverage** — Open pipeline vs target quota ratio
-    - **Distribution** — Penalises early-stage concentration
-    - **Win Rate** — Closed-won vs total closed deals
-    - **Velocity** — Average days in current stage
-    """)
+        - **Coverage** — Open pipeline vs target quota ratio
+        - **Distribution** — Penalises early-stage concentration
+        - **Win Rate** — Closed-won vs total closed deals
+        - **Velocity** — Average days in current stage
+        """)
 
-with tab3:
-    st.markdown("""
-    **Four Risk Signals Combined**
+    with tab3:
+        st.markdown("""
+        **Four Risk Signals Combined**
 
-    | Signal | Weight | Measures |
-    |--------|--------|----------|
-    | Case Volume | 30% | Open cases per account |
-    | Engagement | 25% | Days since last activity |
-    | Revenue | 25% | Revenue relative to median |
-    | Satisfaction | 20% | Average CSAT score |
+        | Signal | Weight | Measures |
+        |--------|--------|----------|
+        | Case Volume | 30% | Open cases per account |
+        | Engagement | 25% | Days since last activity |
+        | Revenue | 25% | Revenue relative to median |
+        | Satisfaction | 20% | Average CSAT score |
 
-    **Risk Level**: High (>0.6), Medium (0.3-0.6), Low (<0.3)
-    """)
+        **Risk Level**: High (>0.6), Medium (0.3-0.6), Low (<0.3)
+        """)
