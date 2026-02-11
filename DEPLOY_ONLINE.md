@@ -22,7 +22,7 @@ Streamlit Community Cloud gives you a free shareable URL with no login required 
 3. **Click "New app"** and configure:
    - **Repository**: `benhgclarke/salesforce-analytics`
    - **Branch**: `main`
-   - **Main file path**: `streamlit_app/Overview.py`
+   - **Main file path**: `streamlit_app/app.py`
 
 4. **Click Deploy**. Streamlit builds and hosts it. You get a URL like:
    ```
@@ -40,7 +40,7 @@ Streamlit Community Cloud gives you a free shareable URL with no login required 
 
 ### Test Locally First
 ```bash
-streamlit run streamlit_app/Overview.py
+streamlit run streamlit_app/app.py
 ```
 Opens at http://localhost:8501
 

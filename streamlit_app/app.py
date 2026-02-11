@@ -2,7 +2,7 @@
 Salesforce Analytics Dashboard — Streamlit Cloud Edition.
 Deploy to https://share.streamlit.io for a free shareable link.
 
-Run locally:  streamlit run streamlit_app/Overview.py
+Run locally:  streamlit run streamlit_app/app.py
 """
 
 import sys
@@ -21,6 +21,14 @@ st.set_page_config(
 
 from streamlit_app.data_loader import load_all_data
 
+# Rename sidebar label from "app" to "Overview"
+st.markdown(
+    """<style>
+    [data-testid="stSidebarNav"] li:first-child span {font-size:0;line-height:0;}
+    [data-testid="stSidebarNav"] li:first-child span::after {content:"Overview";font-size:14px;line-height:normal;}
+    </style>""",
+    unsafe_allow_html=True,
+)
 
 # ---------- Home / Overview ----------
 st.title("📊 Salesforce Analytics Dashboard")
