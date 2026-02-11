@@ -21,15 +21,6 @@ st.set_page_config(
 
 from streamlit_app.data_loader import load_all_data
 
-# Rename sidebar label from "app" to "Overview"
-st.markdown(
-    """<style>
-    [data-testid="stSidebarNav"] li:first-child span {font-size:0;line-height:0;}
-    [data-testid="stSidebarNav"] li:first-child span::after {content:"Overview";font-size:14px;line-height:normal;}
-    </style>""",
-    unsafe_allow_html=True,
-)
-
 # ---------- Home / Overview ----------
 st.title("📊 Salesforce Analytics Dashboard")
 st.caption("Cloud-Enhanced Automation & Analytics Platform")

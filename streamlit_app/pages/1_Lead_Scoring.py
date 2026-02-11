@@ -66,4 +66,5 @@ if priority_filter != "All":
 
 cols_to_show = ["FirstName", "LastName", "Company", "Industry", "LeadSource", "Lead_Score", "Priority", "Status"]
 available = [c for c in cols_to_show if c in display_df.columns]
-st.dataframe(display_df[available].head(50), use_container_width=True, hide_index=True)
+rename_map = {"FirstName": "First_Name", "LastName": "Last_Name", "LeadSource": "Lead_Source"}
+st.dataframe(display_df[available].head(50).rename(columns=rename_map), use_container_width=True, hide_index=True)

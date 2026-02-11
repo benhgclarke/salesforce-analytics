@@ -71,4 +71,5 @@ if level_filter != "All":
 
 cols_to_show = ["Name", "Industry", "AnnualRevenue", "Type", "Churn_Risk_Score", "Churn_Risk_Level"]
 available = [c for c in cols_to_show if c in display.columns]
-st.dataframe(display[available].head(50), use_container_width=True, hide_index=True)
+rename_map = {"AnnualRevenue": "Annual_Revenue"}
+st.dataframe(display[available].head(50).rename(columns=rename_map), use_container_width=True, hide_index=True)
