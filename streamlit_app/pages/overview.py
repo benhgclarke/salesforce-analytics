@@ -57,22 +57,22 @@ def show_overview():
         funnel_df = pd.DataFrame(data["funnel"])
         if not funnel_df.empty:
             # Colour scheme: Closed Won = dark green, Closed Lost = dark red,
-            # other stages = shades of blue (lighter for smaller values)
-            stage_colors = {}
+            # other stages = blue gradient proportional to value
+            stage_colors = {"Closed Won": "#166534", "Closed Lost": "#991b1b"}
             non_closed = [
                 s for s in funnel_df["stage"].tolist()
                 if s not in ("Closed Won", "Closed Lost")
             ]
-            # Sort non-closed stages by total_value so lighter blue = smaller
             stage_vals = funnel_df.set_index("stage")["total_value"]
-            non_closed_sorted = sorted(non_closed, key=lambda s: stage_vals.get(s, 0))
-            blue_shades = ["#bfdbfe", "#93c5fd", "#60a5fa", "#3b82f6", "#2563eb",
-                           "#1d4ed8", "#1e40af"]
-            for i, stage in enumerate(non_closed_sorted):
-                shade_idx = int(i / max(len(non_closed_sorted) - 1, 1) * (len(blue_shades) - 1))
-                stage_colors[stage] = blue_shades[shade_idx]
-            stage_colors["Closed Won"] = "#166534"
-            stage_colors["Closed Lost"] = "#991b1b"
+            max_val = max((stage_vals.get(s, 0) for s in non_closed), default=1) or 1
+            light = (191, 219, 254)   # lightest blue
+            dark = (30, 64, 175)      # darkest blue
+            for stage in non_closed:
+                pct = stage_vals.get(stage, 0) / max_val
+                r = int(light[0] + (dark[0] - light[0]) * pct)
+                g = int(light[1] + (dark[1] - light[1]) * pct)
+                b = int(light[2] + (dark[2] - light[2]) * pct)
+                stage_colors[stage] = f"#{r:02x}{g:02x}{b:02x}"
 
             fig2 = px.bar(
                 funnel_df,

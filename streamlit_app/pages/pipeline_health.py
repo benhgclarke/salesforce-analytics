@@ -35,21 +35,25 @@ def show_pipeline_health():
     funnel_df = pd.DataFrame(funnel)
     if not funnel_df.empty:
         # Colour scheme: Closed Won = dark green, Closed Lost = dark red,
-        # other stages = purple gradient (lighter for smaller x-axis values)
-        stage_colors = {}
+        # other stages = purple gradient proportional to value
+        # (lighter = smaller bar, darker = larger bar, scales to any data)
+        stage_colors = {"Closed Won": "#166534", "Closed Lost": "#991b1b"}
         non_closed = [
             s for s in funnel_df["stage"].tolist()
             if s not in ("Closed Won", "Closed Lost")
         ]
         stage_vals = funnel_df.set_index("stage")["total_value"]
-        non_closed_sorted = sorted(non_closed, key=lambda s: stage_vals.get(s, 0))
-        purple_shades = ["#e9d5ff", "#d8b4fe", "#c084fc", "#a855f7",
-                         "#9333ea", "#7e22ce", "#6b21a8", "#581c87"]
-        for i, stage in enumerate(non_closed_sorted):
-            shade_idx = int(i / max(len(non_closed_sorted) - 1, 1) * (len(purple_shades) - 1))
-            stage_colors[stage] = purple_shades[shade_idx]
-        stage_colors["Closed Won"] = "#166534"
-        stage_colors["Closed Lost"] = "#991b1b"
+        max_val = max((stage_vals.get(s, 0) for s in non_closed), default=1) or 1
+
+        # Lightest purple RGB (233,213,255) → darkest purple RGB (88,28,135)
+        light = (233, 213, 255)
+        dark = (88, 28, 135)
+        for stage in non_closed:
+            pct = stage_vals.get(stage, 0) / max_val  # 0.0 → 1.0
+            r = int(light[0] + (dark[0] - light[0]) * pct)
+            g = int(light[1] + (dark[1] - light[1]) * pct)
+            b = int(light[2] + (dark[2] - light[2]) * pct)
+            stage_colors[stage] = f"#{r:02x}{g:02x}{b:02x}"
 
         fig = px.bar(
             funnel_df, x="total_value", y="stage", orientation="h",
