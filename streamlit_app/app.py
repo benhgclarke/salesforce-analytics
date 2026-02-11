@@ -19,6 +19,12 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Hide the default file-based page navigation that Streamlit auto-generates
+st.markdown(
+    """<style>[data-testid="stSidebarNav"]{display:none;}</style>""",
+    unsafe_allow_html=True,
+)
+
 # --- Page imports (no rendering at import time) ---
 from streamlit_app.pages.overview import show_overview
 from streamlit_app.pages.lead_scoring import show_lead_scoring
