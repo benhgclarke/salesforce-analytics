@@ -65,7 +65,7 @@ def show_overview():
             ]
             stage_vals = funnel_df.set_index("stage")["total_value"]
             max_val = max((stage_vals.get(s, 0) for s in non_closed), default=1) or 1
-            light = (191, 219, 254)   # lightest blue
+            light = (96, 165, 250)    # lightest blue (still clearly blue)
             dark = (30, 64, 175)      # darkest blue
             for stage in non_closed:
                 pct = stage_vals.get(stage, 0) / max_val
@@ -98,7 +98,7 @@ def show_overview():
         st.subheader("Churn Risk Breakdown")
         risk_bd = data["churn_summary"].get("risk_breakdown", {})
         risk_order = ["Low", "Medium", "High"]
-        risk_colors = {"Low": "#16a34a", "Medium": "#3b82f6", "High": "#dc2626"}
+        risk_colors = {"Low": "#94a3b8", "Medium": "#3b82f6", "High": "#dc2626"}
         fig3 = px.pie(
             names=risk_order,
             values=[risk_bd.get(k, 0) for k in risk_order],
