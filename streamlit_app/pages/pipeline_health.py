@@ -83,7 +83,7 @@ def show_pipeline_health():
 
     with right:
         st.subheader("Forecast Categories")
-        fc_colors = {"Commit": "#16a34a", "Best Case": "#3b82f6", "Pipeline": "#94a3b8"}
+        fc_colors = {"Commit": "#ea580c", "Best Case": "#3b82f6", "Pipeline": "#94a3b8"}
         fig3 = px.pie(
             names=["Commit", "Best Case", "Pipeline"],
             values=[forecast.get("commit", 0), forecast.get("best_case", 0), forecast.get("pipeline", 0)],

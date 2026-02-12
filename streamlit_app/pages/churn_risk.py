@@ -24,7 +24,7 @@ def show_churn_risk():
     st.divider()
     left, right = st.columns(2)
 
-    risk_colors = {"Low": "#94a3b8", "Medium": "#3b82f6", "High": "#dc2626"}
+    risk_colors = {"Low": "#94a3b8", "Medium": "#3b82f6", "High": "#ea580c"}
 
     with left:
         st.subheader("Risk Level Distribution")
